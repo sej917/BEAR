@@ -9,8 +9,10 @@ BEAR is free for academic, non-commercial purposes. If you would like to use it 
 
 BEAR is implemented as a collection of Perl and Python scripts, and is known to work with Perl v5.14.2 and Python v2.7.3. BEAR has the following dependencies:
 
-    -Perl Getopt::Long, Bio::SeqIO, List::Util modules
+    -Perl Getopt::Long, Bio::SeqIO (part of BioPerl), List::Util modules
     -Python Bio and Numpy packages
     -Python sys, csv, StringIO, random, decimal, argparse modules
     -DRISEE, which can be downloaded at https://github.com/MG-RAST/DRISEE
 
+Instructions for installing BioPerl can be found at http://www.bioperl.org/wiki/Installing_BioPerl
+Instructions for installing BioPython and Numpy can be found at http://biopython.org/wiki/Getting_Started and http://www.scipy.org/install.html respectively
