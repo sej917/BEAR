@@ -15,4 +15,5 @@ BEAR is implemented as a collection of Perl and Python scripts, and is known to 
     -DRISEE, which can be downloaded at https://github.com/MG-RAST/DRISEE
 
 Instructions for installing BioPerl can be found at http://www.bioperl.org/wiki/Installing_BioPerl
+
 Instructions for installing BioPython and Numpy can be found at http://biopython.org/wiki/Getting_Started and http://www.scipy.org/install.html respectively
