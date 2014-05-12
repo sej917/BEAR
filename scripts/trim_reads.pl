@@ -11,6 +11,9 @@ my $output="";
 my $err_rate="";
 my $err_qual="";
 my $matrix_file="";
+my $h_ins=0;
+my $h_del=0;
+
 my @lengths;
 my @freq;
 
@@ -21,7 +24,9 @@ GetOptions ("i=s" => \$input,
 	    "o=s" => \$output,
 	    "r=s" => \$err_rate,
 	    "q=s" => \$err_qual,
-	    "m=s" => \$matrix_file);
+	    "m=s" => \$matrix_file,
+	    "hi=f" => \$h_ins,
+	    "hd=f" => \$h_del);
 open(DRISEE_ERR_FILE, $err_rate) unless ($err_rate eq "0");
 open(DRISEE_QUAL_FILE, $err_qual) unless ($err_qual eq "0");
 
@@ -44,6 +49,8 @@ if($err_rate ne "0"){
 				($b, $m) = ($2, $4);
 				$rates{$base}{'slope'} = $m;
 				$rates{$base}{'intercept'} = $b;
+				print $rates{$base}{'slope'};
+				print $rates{$base}{'intercept'};
 			}
 		}
 	}
@@ -206,7 +213,7 @@ for (my $pos = 0; $pos <= $length; $pos++){
 for (my $pos = 0; $pos <= $length; $pos++){
 	for(my $row = $min_q; $row <= $max_q; $row++){
 		for (my $col = $min_q; $col <= $max_q; $col++){
-			
+
 			$hash{$pos}{$row}{$col} = $hash{$pos}{$row}{$col} / $rowsum{$pos}{$row};
 		}
 	}
@@ -246,13 +253,13 @@ while(<MYFILE3>){
 	}
 	my $rand_per = rand();
 	my $markov_qual = 0;
-	
+
 	$markov_qual = $seeds[rand @seeds];
 	my @qual_string=();	
 	push(@qual_string, chr($markov_qual+33));
 	my $state_num = 0;
 	my $prev1 = my $prev2 = my $prev3 = my $prev4 = my $prev5 = my $prev6 = my $avg = $min_q;
-	
+
 	my $rand_length = $lengths[rand @lengths];
 	my $rand2 = rand();
 	my $new_seq = substr($curseq, 0, $rand_length);
@@ -295,9 +302,31 @@ while(<MYFILE3>){
 			$prev2 = $prev1;
 			$avg = int( ($prev2*.38) + ($prev3*.29) + ($prev4*.20) + ($prev5*.11) + ($prev6*.02));
 		}
+		my $nuc_check;
+		if( $cur_nuc ~~ @nucleotides){ #handle ambiguous nucleotides, smartmatch requires perl 5.10
+			$nuc_check = $cur_nuc;
+		}else{
+			$nuc_check = $nucleotides[rand @nucleotides];
+		}
 		$prev1 = $markov_qual;
-		my $sub_rate = $err_rate ne "0" ? exp( ($rates{$cur_nuc}{'slope'} * $i) + $rates{$cur_nuc}{'intercept'})/100 : 10**((-$markov_qual)/10);
-		my $indel_rate = $err_rate ne "0" ? exp( ($rates{'X'}{'slope'} * $i) + $rates{'X'}{'intercept'})/100 : 0;
+		my $sub_rate_check = $err_rate ne "0" ? exp( ($rates{$nuc_check}{'slope'} * $i) + $rates{$nuc_check}{'intercept'}) : 10**((-$markov_qual)/10);
+		#my $sub_rate_check = $err_rate ne "0" ? $rates{$nuc_check}{'slope'} * exp( exp($rates{$nuc_check}{'intercept'}) * $i) : 10**((-$markov_qual)/10);
+		my $sub_rate=0;
+		if($sub_rate_check > 1.0){
+			$sub_rate = 1.0;
+		}else{
+			$sub_rate = $sub_rate_check;
+		}
+		#my $sub_rate = $err_rate ne "0" ? exp( ($rates{$nuc_check}{'slope'} * $i) + $rates{$nuc_check}{'intercept'})/100 : 10**((-$markov_qual)/10);
+		#my $indel_rate = $err_rate ne "0" ? exp( ($rates{'X'}{'slope'} * $i) + $rates{'X'}{'intercept'})/100 : 0;
+		#my $indel_rate_check = $err_rate ne "0" ? $rates{'X'}{'slope'} * exp( exp($rates{'X'}{'intercept'}) * $i) : 0;
+		my $indel_rate_check = $err_rate ne "0" ? exp( ($rates{'X'}{'slope'} * $i) + $rates{'X'}{'intercept'}) : 0;
+		my $indel_rate = 0;
+		if($indel_rate_check > 1.0){
+			$indel_rate = 1.0; 
+		}else{
+			$indel_rate = $indel_rate_check;
+		}
 		my $found = 0;
 		my $test_col = 0;
 		$rand_per = rand();
@@ -360,16 +389,56 @@ while(<MYFILE3>){
 					push(@qual_string, chr($col+33));
 					$markov_qual = $col;
 					last;
-				
+
 				}else{
 					#print "RANDPER: $rand_per\n POS: $i\nAVG: $avg \n QUAL: $col $blah \n COL $hash{$i}{$avg}{$col}\n COL-1 $hash{$i}{$avg}{$col-1}\n";
 
 				}
 			}
 			my $temp_els = scalar(@qual_string);
+			my $cur_base = substr($new_seq, $i, 1);
+			my $prev_base = substr($new_seq, $i-1, 1);
+			my $h_total = $h_ins + $h_del;
+			my $h_i_per = $h_ins / ($h_ins + $h_del);
+			my $h_d_per = $h_del / ($h_ins + $h_del);
+			#if($cur_base eq $prev_base){
+				my $h_check = rand();
+				my $h_max = 12;
+				my $h_cur = 0;
+				while($h_check < $h_total && $h_cur < $h_max){
+					my $h_err_type = rand();
+					if($h_err_type < $h_i_per){
+					#homopolymer insertion
+						#print "OLD SEQ: $new_seq\n";
+						substr($new_seq, $i+1, 0, $cur_base);
+						#print "NEW SEQ: $new_seq\n";
+						my $new_ins_qual = int($quals{'X'}{'intercept'} + ($quals{'X'}{'coef1'} * $i) + (($quals{'X'}{'coef2'}) * ($i**2)));
+						my $ins_qual;
+						if($new_ins_qual > $max_q){
+							$ins_qual = $max_q;
+						}elsif($new_ins_qual < $min_q){
+							$ins_qual = $min_q;
+						}else{
+							$ins_qual = $new_ins_qual;
+						}
+						push(@qual_string, chr($ins_qual+33));
+						$i++;
+						$rand_length++;
+						$markov_qual = $ins_qual;
+					}else{
+						substr($new_seq, $i, 1) = "";
+						$i--;
+						$rand_length--;
+						$markov_qual = ord(pop(@qual_string))-33;
+					}
+					$h_check = rand();
+					$h_cur++;
+				}
+			#}
+
+
 			if($indel_check < $indel_rate){
 				if($type>$indel_rates{'D'}{$i}){ #insertion
-					my $cur_base = substr($new_seq, $i, 1);
 					my $nuc_prob = rand();
 					for my $base_check (@bases){
 						if($nuc_prob < $ins_matrix{$cur_base}{$base_check}){
@@ -408,16 +477,16 @@ while(<MYFILE3>){
 	$prev5 = 0;
 	$avg = 0;
 	$seqs += 1;
-	
+
 	my $fasta_length = length($new_seq);
 	my $qual_length = scalar(@qual_string);
-	
+
 	my $trimseq='';
 	my $trimqual='';
 	my $temp_qual= join "", @qual_string;	
         
 	$trimseq = $new_seq;
-    $trimqual = $temp_qual;
+    	$trimqual = $temp_qual;
 	print MYFILE "$header\n";
 	print MYFILE "$trimseq";
 	print MYFILE  "\n+\n";
