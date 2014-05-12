@@ -35,7 +35,13 @@ sub analyze_cluster{
 	my $seqRef = $_[1];
 	my $qualRef = $_[2];
 	my $s_id = (split /\t/, $cluster[0])[8];
+	my $hpoly_del =0;
+	my $hpoly_ins =0;
+	my $h_count = 0;
+	my $dels = 0;
+	my $ins = 0;
 	shift @cluster;
+	
 	foreach(@cluster){
 		my( $h_ident, $h_align, $h_id ) = (split /\t/, $_)[3, 7, 8];
 		if($h_ident < 100.0){ #only concerned with erroneous nucletotides
@@ -56,12 +62,12 @@ sub analyze_cluster{
 						my $s_subseq = substr($seqRef->{$s_id}, $s_pos, $num);
 						$h_tmp .= $h_subseq;
 						$s_tmp .= $s_subseq;
-						
+
 						my @h_subqual = @h_qual[$h_pos..$h_pos+$num];
 						my @s_subqual = @s_qual[$s_pos..$s_pos+$num];
 						push(@h_tmpqual, @h_subqual);
 						push(@s_tmpqual, @s_subqual);
-						
+
 						for(my $i = 0; $i < $num; $i++){ 
 							my $h_char = substr($h_subseq, $i, 1);
 							my $s_char = substr($s_subseq, $i, 1);
@@ -73,8 +79,13 @@ sub analyze_cluster{
 								push(@{$err_hash{$bad_nuc}{$subpos}}, $subqual);
 								$sub_matr{$cor_nuc}{$bad_nuc} += 1; 
 							}
+							if($i > 0){
+								if($h_char eq substr($h_subseq, $i-1, 1)){
+									$h_count++;
+								}
+							}
 						}
-						
+
 						$h_pos += $num;
 						$s_pos += $num;
 					}elsif($type eq "D"){
@@ -82,6 +93,11 @@ sub analyze_cluster{
 						for( my $i = 0; $i < $num; $i++){
 							my $d_char = substr($s_subseq, $i, 1);
 							$err_hash{'D'}{$i+$s_pos} += 1;
+							if($i > 0 && $d_char eq substr($s_subseq, $i-1, 1)){
+								$hpoly_del++;
+								$h_count++;	
+							}
+							$dels++;
 						}
 						$s_pos += $num;
 					}elsif($type eq "I"){
@@ -94,27 +110,31 @@ sub analyze_cluster{
 						#my @h_subseq = $h_pos > 0 ? substr($seqRef->{$h_id}, $h_pos-1, $num) : substr($seqRef->{$h_id}, $h_pos-1, $num);
 						my @h_subseq = substr($seqRef->{$h_id}, $h_pos, $num);
 						my $sublen = length(@h_subseq);
+						my $prev_char = $h_pos > 0 ? substr($seqRef->{$h_id}, $h_pos-1, 1) : $bases[rand @bases];
 						for( my $i = 0; $i < $num; $i++){
-							#if($h_pos > 0 && $i +1 < $sublen){
-							#	$ins_matr{$h_subseq[$i]}{$h_subseq[$i+1]}+=1;
-							#}
+							my $cur_char = substr($seqRef->{$h_id}, $h_pos+$i, $num);
+							my $prev2 = $h_pos > 0 ? substr($seqRef->{$h_id}, $h_pos+$i-1, 1) : $bases[rand @bases];
+							if($cur_char eq $prev2){
+								$hpoly_ins++;
+								$h_count++;
+							}
 							my $ins_qual = $h_subqual[$i];
 							push(@{$err_hash{'X'}{$i+$h_pos}}, $ins_qual);
 							$err_hash{'I'}{$i+$h_pos} += 1;
+							$ins++;
 						}
-						my $prev_char = $h_pos > 0 ? substr($seqRef->{$h_id}, $h_pos-1, 1) : $bases[rand @bases]; #value for "prev char" should go between ? and :
 						for my $char (@h_subseq){
 							$ins_matr{$prev_char}{$char} +=1;
 							$prev_char = $char;
 						}
 						$h_pos += $num;
 					}
-					
+
 				}
 			}
 		}
 	}
-	return (\%err_hash, \%sub_matr,\%ins_matr);
+	return (\%err_hash, \%sub_matr,\%ins_matr,$hpoly_del,$dels,$hpoly_ins,$ins,$h_count);
 }
 
 my ($fastq_file, $summary_file) = @ARGV;
@@ -201,13 +221,28 @@ foreach my $base1 (@nucl){
 my $small_hash_ref;
 my $sub_matr_ref;
 my $ins_matr_ref;
+my $cur_h_del = 0;
+my $cur_del = 0;
+my $cur_h_ins = 0;
+my $cur_ins = 0;
+my $cur_h = 0;
 
+my $total_h_del = 0;
+my $total_del = 0;
+my $total_h_ins = 0;
+my $total_ins = 0;
+my $total_h = 0;
 foreach my $cluster (@clusters){
 	$counter += 1;
-	($small_hash_ref, $sub_matr_ref, $ins_matr_ref) = &analyze_cluster($cluster, \%seqs, \%quals, $max_length);
+	($small_hash_ref, $sub_matr_ref, $ins_matr_ref,$cur_h_del,$cur_del,$cur_h_ins,$cur_ins,$cur_h) = &analyze_cluster($cluster, \%seqs, \%quals, $max_length);
 	my %small_hash = %$small_hash_ref;
 	my %sub_matr_small = %$sub_matr_ref;
 	my %ins_matr_small = %$ins_matr_ref;
+	$total_h_del += $cur_h_del;
+	$total_del += $cur_del;
+	$total_h_ins += $cur_h_ins;
+	$total_ins += $cur_ins;
+	$total_h += $cur_h;
 	foreach my $base (@bases){
 		if (!($base eq 'D' || $base eq 'I')){
 			foreach my $i (0..$max_length){
@@ -311,3 +346,11 @@ foreach my $base1(@nucl){
         print MATR_FILE "\n";
 }
 close(MATR_FILE);
+
+print "$total_h_ins\n";
+print "$total_h_del\n";
+print "$total_h\n";
+my $h_ins = $total_h_ins / $total_h;
+my $h_del = $total_h_del / $total_h;
+print "Homopolymer insertion rate: $h_ins\n";
+print "Homopolymer deletion rate: $h_del\n";
