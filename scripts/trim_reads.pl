@@ -136,6 +136,14 @@ if($matrix_file ne "0"){
 	}
 }
 
+#foreach my $base1(@bases){
+#	foreach my $base2(@bases){
+#		print "$sub_matrix{$base1}{$base2}\t";
+#	}
+#	print "\n";
+#}
+
+
 my %hash;
 
 my $min_q = 1;
@@ -260,10 +268,11 @@ while(<MYFILE3>){
 	my $state_num = 0;
 	my $prev1 = my $prev2 = my $prev3 = my $prev4 = my $prev5 = my $prev6 = my $avg = $min_q;
 
+	#change these next few lines for biased sequences
 	my $rand_length = $lengths[rand @lengths];
 	my $rand2 = rand();
-	my $new_seq = substr($curseq, 0, $rand_length);
-	for (my $i = 1; $i < $rand_length; $i++){ #$i=0 is already on the string
+	my $new_seq = $curseq; $rand_length = length($new_seq);#UNCOMMENT LATER: substr($curseq, 0, $rand_length);
+	for (my $i = 1; $i < $rand_length; $i++){ #$i=0 is already on the string, remove the -1 after
 		my $avg2 = $avg;
 		$rand_per = rand();
 		my $cur_nuc = substr($new_seq, $i, 1);
@@ -343,6 +352,9 @@ while(<MYFILE3>){
 			if($sub_check < $sub_rate){
 				if($err_rate ne "0"){
 					my $cur_base = substr($new_seq, $i, 1);
+					if($cur_base eq 'N' || $cur_base eq 'n'){ #
+						$cur_base = $bases[rand @bases];
+					}
 					my $nuc_prob = rand();
 					for my $base_check (@bases){
 						if($nuc_prob < $sub_matrix{$cur_base}{$base_check}){
@@ -398,14 +410,14 @@ while(<MYFILE3>){
 			my $temp_els = scalar(@qual_string);
 			my $cur_base = substr($new_seq, $i, 1);
 			my $prev_base = substr($new_seq, $i-1, 1);
-			my $h_total = $h_ins + $h_del;
-			my $h_i_per = $h_ins / ($h_ins + $h_del);
-			my $h_d_per = $h_del / ($h_ins + $h_del);
+			my $h_total = $h_ins + $h_del > 0 ? $h_ins + $h_del : 1;
+			my $h_i_per = $h_ins / ($h_total);
+			my $h_d_per = $h_del / ($h_total);
 			#if($cur_base eq $prev_base){
 				my $h_check = rand();
 				my $h_max = 12;
 				my $h_cur = 0;
-				while($h_check < $h_total && $h_cur < $h_max){
+				while($h_check < $h_total && $h_cur < $h_max && $h_total != 1){
 					my $h_err_type = rand();
 					if($h_err_type < $h_i_per){
 					#homopolymer insertion
