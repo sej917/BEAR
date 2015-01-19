@@ -15,6 +15,7 @@ parser.add_argument('-t', metavar='<total_reads>', type=int, dest="total", help=
 parser.add_argument('-l', metavar='<longest_read>', type=int, dest="length", help="The length, in bp, of the longest possible read to simulate")
 parser.add_argument('-i', metavar='<insert_mean_length>', type=int, dest="insert", default="0", help="Average length of insert for paired-end reads.")
 parser.add_argument('-s', metavar='<insert_stddev>', type=int, dest="stddev", default="0", help="Standard deviation of insert length for paired-end reads" )
+parser.add_argument('-d', metavar='<direction_switch>', action='store_true', dest="direction", help="Use this switch to generate reads in both forward and reverse orientations" )
 args = parser.parse_args()
  
 
@@ -76,10 +77,20 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end1 = limit
 					start2 = 0
 					end2 = limit
-				f4.write(">%s\n" % i.description)
-				f4.write("%s\n" % i.seq[start1:end1])
-				f5.write(">%s\n" % i.description)
-                                f5.write("%s\n" % i.seq[end2:start2:-1])
+				read1 = i.seq[start1:end1]
+				read2 = i.seq[end2:start2:-1]
+				if(args.direction):
+					check = random.random()
+					if(check < 0.5): #forward orientation
+						f4.write(">%s\n" % i.description)
+						f4.write("%s\n" % read1)
+						f5.write(">%s\n" % i.description)
+                                		f5.write("%s\n" % read2)
+					else: #reverse orientation
+						f4.write(">%s\n" % i.description)
+						f4.write("%s\n" % read1[::-1])
+						f5.write(">%s\n" % i.description)
+						f5.write("%s\n" % read2[::-1])
 			else:
 				if(limit > max_read_length) :	
 					start=random.randint(0, limit-max_read_length)
@@ -87,8 +98,15 @@ for i in SeqIO.parse(f1, 'fasta') :
 				else:
 					start=0
 					end=limit
-				f4.write(">%s\n" % i.description)
-				f4.write("%s\n" % i.seq[start:end])
+				read = i.seq[start:end]
+				if(args.direction):
+					check = random.random()
+					if(check < 0.5): #forward orientation
+						f4.write(">%s\n" % i.description)
+						f4.write("%s\n" % read)
+					else:
+						f4.write(">%s\n" % i.description)
+						f4.write("%s\n" % read[::-1])
 			
 	if (genome_num >= len(species) ) :
 		break;
