@@ -17,7 +17,7 @@ parser.add_argument('-i', metavar='<insert_mean_length>', type=int, dest="insert
 parser.add_argument('-s', metavar='<insert_stddev>', type=int, dest="stddev", default="0", help="Standard deviation of insert length for paired-end reads" )
 parser.add_argument('-d', metavar='<direction_switch>', action='store_true', dest="direction", help="Use this switch to generate reads in both forward and reverse orientations" )
 args = parser.parse_args()
- 
+
 
 #Reference metagenome database file (FASTA)
 f1 = open(args.ref);
@@ -30,7 +30,7 @@ total_reads = args.total
 max_read_length = args.length
 
 insert_avg = args.insert
-insert_stdev = args.stddev
+insert_stddev = args.stddev
 
 if(insert_avg):
 	f4 = open(args.output + '.1.fasta', 'w')
@@ -53,19 +53,19 @@ for row in div_file:
 
 
 for i in SeqIO.parse(f1, 'fasta') :
-	genome_num=0	
+	genome_num=0
 	while(not(species[genome_num] in i.description)) :
 		genome_num+=1
 	if(species[genome_num] in i.description) :
 		coverage=max(1, int((decimal.Decimal(diversity[genome_num])*total_reads)))
-		
+
 		limit=len(i.seq)
 		for j in range(0, coverage) :
                 	rand = random.random()
                 	rand_length = 0
                 	numLen = len(lengths)-1
-			
-			if( (insert_avg != 0) & (insert_stdev != 0)):
+
+			if( (insert_avg != 0) & (insert_stddev != 0)):
 				cur_insert = int(random.gauss(insert_avg, insert_stddev))
 				if(limit > (max_read_length * 2 + cur_insert)):
 					start1 = random.randint(0, limit-(2*max_read_length + cur_insert))
@@ -92,7 +92,7 @@ for i in SeqIO.parse(f1, 'fasta') :
 						f5.write(">%s\n" % i.description)
 						f5.write("%s\n" % read2[::-1])
 			else:
-				if(limit > max_read_length) :	
+				if(limit > max_read_length) :
 					start=random.randint(0, limit-max_read_length)
 					end=start+max_read_length
 				else:
@@ -107,11 +107,10 @@ for i in SeqIO.parse(f1, 'fasta') :
 					else:
 						f4.write(">%s\n" % i.description)
 						f4.write("%s\n" % read[::-1])
-			
+
 	if (genome_num >= len(species) ) :
 		break;
 
 f1.close()
 f2.close()
 f4.close()
-
