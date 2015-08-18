@@ -30,7 +30,7 @@ total_reads = args.total
 max_read_length = args.length
 
 insert_avg = args.insert
-insert_stdev = args.stddev
+insert_stddev = args.stddev
 
 if(insert_avg):
 	f4 = open(args.output + '.1.fasta', 'w')
@@ -65,7 +65,7 @@ for i in SeqIO.parse(f1, 'fasta') :
                 	rand_length = 0
                 	numLen = len(lengths)-1
 
-			if( (insert_avg != 0) & (insert_stdev != 0)):
+			if( (insert_avg != 0) & (insert_stddev != 0)):
 				cur_insert = int(random.gauss(insert_avg, insert_stddev))
 				if(limit > (max_read_length * 2 + cur_insert)):
 					start1 = random.randint(0, limit-(2*max_read_length + cur_insert))
