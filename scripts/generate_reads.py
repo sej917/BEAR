@@ -79,18 +79,21 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end2 = limit
 				read1 = i.seq[start1:end1]
 				read2 = i.seq[end2:start2:-1]
-				if(args.direction):
-					check = random.random()
-					if(check < 0.5): #forward orientation
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read1)
-						f5.write(">%s\n" % i.description)
-                                		f5.write("%s\n" % read2)
-					else: #reverse orientation
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read1[::-1])
-						f5.write(">%s\n" % i.description)
-						f5.write("%s\n" % read2[::-1])
+				if(args.direction and random.random() < 0.5):
+                                        print "rev"
+				        #reverse orientation
+					f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read1[::-1])
+					f5.write(">%s\n" % i.description)
+					f5.write("%s\n" % read2[::-1])
+				else:
+                                        print "for"
+                                        #forward orientation
+                                        f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read1)
+					f5.write(">%s\n" % i.description)
+                                	f5.write("%s\n" % read2)
+
 			else:
 				if(limit > max_read_length) :
 					start=random.randint(0, limit-max_read_length)
@@ -99,14 +102,16 @@ for i in SeqIO.parse(f1, 'fasta') :
 					start=0
 					end=limit
 				read = i.seq[start:end]
-				if(args.direction):
-					check = random.random()
-					if(check < 0.5): #forward orientation
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read)
-					else:
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read[::-1])
+				if(args.direction and random.random() < 0.5):
+                                        print "2rev"
+                                        #reverse orientation
+					f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read[::-1])
+				else:
+                                        print "2for"
+                                        #forward orientation
+					f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read)
 
 	if (genome_num >= len(species) ) :
 		break;
