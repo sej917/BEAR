@@ -3,7 +3,7 @@
 import numpy as np
 import sys
 
-d = np.loadtxt(sys.argv[1], skiprows=3)
+d = np.loadtxt(sys.argv[1], skiprows=3) / 100
 a = d[:,7]
 t = d[:,8]
 g = d[:,9]
