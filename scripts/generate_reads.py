@@ -65,11 +65,7 @@ for i in SeqIO.parse(f1, 'fasta') :
                 	rand_length = 0
                 	numLen = len(lengths)-1
 
-<<<<<<< HEAD
-			if( (insert_avg != 0) & (insert_stdev != 0)):
-=======
 			if( (insert_avg != 0) & (insert_stddev != 0)):
->>>>>>> 5cdada2dc2b92340e2e668b6273783525ebb29ad
 				cur_insert = int(random.gauss(insert_avg, insert_stddev))
 				if(limit > (max_read_length * 2 + cur_insert)):
 					start1 = random.randint(0, limit-(2*max_read_length + cur_insert))
@@ -83,6 +79,7 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end2 = limit
 				comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
 				read1 = i.seq[start1:end1]
+<<<<<<< HEAD
 				read2 = ''.join([comp[b] for b in i.seq[end2:start2:-1]])
 				if(args.direction):
 					check = random.random()
@@ -96,6 +93,22 @@ for i in SeqIO.parse(f1, 'fasta') :
 						f4.write("%s\n" % read1[::-1])
 						f5.write(">%s\n" % i.description)
 						f5.write("%s\n" % read2[::-1])
+=======
+				read2 = i.seq[end2:start2:-1]
+				if(args.direction and random.random() < 0.5):
+				        #reverse orientation
+					f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read1[::-1])
+					f5.write(">%s\n" % i.description)
+					f5.write("%s\n" % read2[::-1])
+				else:
+                                        #forward orientation
+                                        f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read1)
+					f5.write(">%s\n" % i.description)
+                                	f5.write("%s\n" % read2)
+
+>>>>>>> bfdb786edfda546c5c19246889bf23c9cc97d690
 			else:
 				if(limit > max_read_length) :
 					start=random.randint(0, limit-max_read_length)
@@ -104,14 +117,14 @@ for i in SeqIO.parse(f1, 'fasta') :
 					start=0
 					end=limit
 				read = i.seq[start:end]
-				if(args.direction):
-					check = random.random()
-					if(check < 0.5): #forward orientation
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read)
-					else:
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read[::-1])
+				if(args.direction and random.random() < 0.5):
+                                        #reverse orientation
+					f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read[::-1])
+				else:
+                                        #forward orientation
+					f4.write(">%s\n" % i.description)
+					f4.write("%s\n" % read)
 
 	if (genome_num >= len(species) ) :
 		break;
