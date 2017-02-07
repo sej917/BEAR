@@ -79,7 +79,6 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end2 = limit
 				comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
 				read1 = i.seq[start1:end1]
-<<<<<<< HEAD
 				read2 = ''.join([comp[b] for b in i.seq[end2:start2:-1]])
 				if(args.direction):
 					check = random.random()
@@ -93,7 +92,6 @@ for i in SeqIO.parse(f1, 'fasta') :
 						f4.write("%s\n" % read1[::-1])
 						f5.write(">%s\n" % i.description)
 						f5.write("%s\n" % read2[::-1])
-=======
 				read2 = i.seq[end2:start2:-1]
 				if(args.direction and random.random() < 0.5):
 				        #reverse orientation
