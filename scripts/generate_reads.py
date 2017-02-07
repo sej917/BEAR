@@ -81,8 +81,9 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end1 = limit
 					start2 = 0
 					end2 = limit
+				comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
 				read1 = i.seq[start1:end1]
-				read2 = i.seq[end2:start2:-1]
+				read2 = ''.join([comp[b] for b in i.seq[end2:start2:-1]])
 				if(args.direction):
 					check = random.random()
 					if(check < 0.5): #forward orientation
