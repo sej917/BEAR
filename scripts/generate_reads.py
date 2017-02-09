@@ -46,7 +46,7 @@ diversity=[]
 
 lengths=[]
 freqs=[]
-
+comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
 for row in div_file:
 	species.append(row[0][1:])
 	diversity.append(decimal.Decimal(row[1]))
@@ -77,7 +77,6 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end1 = limit
 					start2 = 0
 					end2 = limit
-				comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
 				read1 = i.seq[start1:end1]
 				read2 = ''.join([comp[b] for b in i.seq[end2:start2:-1]])
 				if(args.direction):
@@ -106,7 +105,6 @@ for i in SeqIO.parse(f1, 'fasta') :
 					f5.write(">%s\n" % i.description)
                                 	f5.write("%s\n" % read2)
 
->>>>>>> bfdb786edfda546c5c19246889bf23c9cc97d690
 			else:
 				if(limit > max_read_length) :
 					start=random.randint(0, limit-max_read_length)
@@ -117,8 +115,10 @@ for i in SeqIO.parse(f1, 'fasta') :
 				read = i.seq[start:end]
 				if(args.direction and random.random() < 0.5):
                                         #reverse orientation
+					read = ''.join([comp[b] for b in i.seq[end:start:-1]])
 					f4.write(">%s\n" % i.description)
-					f4.write("%s\n" % read[::-1])
+					f4.write("%s\n" % read)
+					
 				else:
                                         #forward orientation
 					f4.write(">%s\n" % i.description)
