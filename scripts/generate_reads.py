@@ -46,7 +46,15 @@ diversity=[]
 
 lengths=[]
 freqs=[]
-comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
+comp = {'A':'T', 'T':'A', 'G':'C', 'C':'G', 
+    'N':'N', 'R':'Y', 'Y':'R', 'K':'M', 
+    'M':'K', 'W':'W', 'S':'S', 'D':'H', 
+    'H':'D', 'B':'V', 'V':'B', 'a':'t', 
+    't':'a', 'g':'c', 'c':'g', 'n':'n', 
+    'r':'y', 'y':'r', 'k':'m', 'm':'k', 
+    'w':'w', 's':'s', 'd':'h', 'h':'d', 
+    'b':'v', 'v':'b'}
+
 for row in div_file:
 	species.append(row[0][1:])
 	diversity.append(decimal.Decimal(row[1]))
