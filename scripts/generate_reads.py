@@ -87,9 +87,11 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end2 = limit
 				read1 = i.seq[start1:end1]
 				read2 = ''.join([comp[b] for b in i.seq[end2:start2:-1]])
-				f4.write(">%s\n" % i.description)
+				seqid1 = i.description + "_" + str(j) + "/1"
+				seqid2 = i.description + "_" + str(j) + "/2"
+				f4.write(">%s\n" % seqid1)
 				f4.write("%s\n" % read1)
-				f5.write(">%s\n" % i.description)
+				f5.write(">%s\n" % seqid2)
 				f5.write("%s\n" % read2)
 			else: 
 				if(limit > max_read_length) :
@@ -102,7 +104,8 @@ for i in SeqIO.parse(f1, 'fasta') :
 				if(args.direction and random.random() < 0.5):
                     #reverse orientation
 					read = ''.join([comp[b] for b in i.seq[end:start:-1]])
-					f4.write(">%s\n" % i.description)
+					seqid = i.description.rstrip('\r\n') + "_" + str(j)
+					f4.write(">%s\n" % seqid)
 					f4.write("%s\n" % read)
 					
 				else:
