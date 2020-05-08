@@ -18,6 +18,7 @@ parser.add_argument('-s', metavar='<insert_stddev>', type=int, dest="stddev", de
 parser.add_argument('-d', '--direction', action='store_true', dest="direction", help="Use this switch to generate reads in both forward and reverse orientations" )
 args = parser.parse_args()
 
+	
 
 #Reference metagenome database file (FASTA)
 f1 = open(args.ref);
@@ -32,7 +33,7 @@ max_read_length = args.length
 insert_avg = args.insert
 insert_stddev = args.stddev
 
-if(insert_avg):
+if(args.direction):
 	f4 = open(args.output + '.1.fasta', 'w')
 	f5 = open(args.output + '.2.fasta', 'w')
 else:
@@ -59,7 +60,6 @@ for row in div_file:
 	species.append(row[0][1:])
 	diversity.append(decimal.Decimal(row[1]))
 
-
 for i in SeqIO.parse(f1, 'fasta') :
 	genome_num=0
 	while(not(species[genome_num] in i.description)) :
@@ -73,12 +73,13 @@ for i in SeqIO.parse(f1, 'fasta') :
                 	rand_length = 0
                 	numLen = len(lengths)-1
 
-			if( (insert_avg != 0) & (insert_stddev != 0)):
+			if(args.direction): ##Paired end
 				cur_insert = int(random.gauss(insert_avg, insert_stddev))
-				if(limit > (max_read_length * 2 + cur_insert)):
-					start1 = random.randint(0, limit-(2*max_read_length + cur_insert))
+				print(cur_insert)
+				if(limit > cur_insert):
+					start1 = random.randint(0, limit-cur_insert)
 					end1 = start1 + max_read_length
-					start2 = end1 + cur_insert
+					start2 = start1 + cur_insert - max_read_length
 					end2 = start2 + max_read_length
 				else:
 					start1 = 0
@@ -87,33 +88,11 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end2 = limit
 				read1 = i.seq[start1:end1]
 				read2 = ''.join([comp[b] for b in i.seq[end2:start2:-1]])
-				if(args.direction):
-					check = random.random()
-					if(check < 0.5): #forward orientation
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read1)
-						f5.write(">%s\n" % i.description)
-                                		f5.write("%s\n" % read2)
-					else: #reverse orientation
-						f4.write(">%s\n" % i.description)
-						f4.write("%s\n" % read1[::-1])
-						f5.write(">%s\n" % i.description)
-						f5.write("%s\n" % read2[::-1])
-				read2 = i.seq[end2:start2:-1]
-				if(args.direction and random.random() < 0.5):
-				        #reverse orientation
-					f4.write(">%s\n" % i.description)
-					f4.write("%s\n" % read1[::-1])
-					f5.write(">%s\n" % i.description)
-					f5.write("%s\n" % read2[::-1])
-				else:
-                                        #forward orientation
-                                        f4.write(">%s\n" % i.description)
-					f4.write("%s\n" % read1)
-					f5.write(">%s\n" % i.description)
-                                	f5.write("%s\n" % read2)
-
-			else:
+				f4.write(">%s\n" % i.description)
+				f4.write("%s\n" % read1)
+				f5.write(">%s\n" % i.description)
+				f5.write("%s\n" % read2)
+			else: 
 				if(limit > max_read_length) :
 					start=random.randint(0, limit-max_read_length)
 					end=start+max_read_length
@@ -122,13 +101,13 @@ for i in SeqIO.parse(f1, 'fasta') :
 					end=limit
 				read = i.seq[start:end]
 				if(args.direction and random.random() < 0.5):
-                                        #reverse orientation
+                    #reverse orientation
 					read = ''.join([comp[b] for b in i.seq[end:start:-1]])
 					f4.write(">%s\n" % i.description)
 					f4.write("%s\n" % read)
 					
 				else:
-                                        #forward orientation
+                    #forward orientation
 					f4.write(">%s\n" % i.description)
 					f4.write("%s\n" % read)
 
