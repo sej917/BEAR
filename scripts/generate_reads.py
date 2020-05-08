@@ -75,7 +75,6 @@ for i in SeqIO.parse(f1, 'fasta') :
 
 			if(args.direction): ##Paired end
 				cur_insert = int(random.gauss(insert_avg, insert_stddev))
-				print(cur_insert)
 				if(limit > cur_insert):
 					start1 = random.randint(0, limit-cur_insert)
 					end1 = start1 + max_read_length
